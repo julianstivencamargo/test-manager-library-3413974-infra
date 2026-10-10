@@ -1,0 +1,10 @@
+# Environment files
+.env
+.env.*
+*.env
+
+# Volumes / local data
+data/
+db_data/
+.DS_Store
+Thumbs.db
