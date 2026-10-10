@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: manager-library-db
+    environment:
+      POSTGRES_DB: manager_library
+      POSTGRES_USER: library_user
+      POSTGRES_PASSWORD: library_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library_user -d manager_library"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+    networks:
+      - manager-library-net
+
+  api:
+    build:
+      context: ../test-manager-library-3413974-api
+      dockerfile: Dockerfile
+    container_name: manager-library-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../test-manager-library-3413974-api:/app
+      - /app/vendor
+    environment:
+      - APP_NAME=ManagerLibrary
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8000
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=manager_library
+      - DB_USERNAME=library_user
+      - DB_PASSWORD=library_secret
+      - DB_SCHEMA=library
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=Admin1234*
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - manager-library-net
+
+  app:
+    build:
+      context: ../test-manager-library-3413974-app
+      dockerfile: Dockerfile
+    container_name: manager-library-app
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - api
+    networks:
+      - manager-library-net
+
+  page:
+    image: nginx:alpine
+    container_name: manager-library-page
+    ports:
+      - "8080:80"
+    volumes:
+      - ../test-manager-library-3413974-page:/usr/share/nginx/html:ro
+    networks:
+      - manager-library-net
+
+volumes:
+  db_data:
+
+networks:
+  manager-library-net:
+    driver: bridge

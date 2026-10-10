@@ -1,51 +1,54 @@
-# test-manager-library-3413974-infra
+# test-manager-library-3413974-infra — Infraestructura Global
 
-> **Prueba técnica · Ficha ADSO 3413974**
-> Horario: de **9:15 a. m. a 3:00 p. m.** (15:00). Después, **feria de presentación** de cada proyecto.
+Orquestación con Docker Compose para el proyecto **Manager Library** (Ficha ADSO 3413974 — T-20).
 
-Este repositorio es la **infraestructura** de *Manager Library*: contenedores, red, volúmenes y el motor de base de datos vacío. **Empieza vacío a propósito**: se construye en el fork de cada aprendiz.
+## Servicios Disponibles
 
-## Instrucciones
+| Servicio | Contenedor | Puerto Host | Descripción |
+|---|---|---|---|
+| **Base de Datos** | `manager-library-db` | `5432` | PostgreSQL 16 Alpine con base `manager_library` y esquema `library`. |
+| **API Backend** | `manager-library-api` | `8000` | Laravel 11 / PHP 8.2 con Arquitectura Hexagonal y JWT. |
+| **Frontend App** | `manager-library-app` | `3000` | SPA en React para gestión de catálogo, socios, préstamos y reportes. |
+| **Sitio Público** | `manager-library-page` | `8080` | Sitio estático Nginx para presentación en la feria. |
 
-Cada aprendiz debe **crear el fork** de los seis repositorios del proyecto y **resolver el proyecto
-con el spec planteado**.
+---
 
-1. Hacer fork, a su cuenta de GitHub, de cada repositorio de la tabla del final.
-2. Leer el spec en [`test-manager-library-3413974-docs`](https://github.com/code-sena/test-manager-library-3413974-docs).
-   Se entrega en dos versiones: `spec-python/` y `spec-.net/`.
-3. Desarrollar en los forks.
+## Instrucciones de Inicio Rápido (Un Solo Comando)
 
-## El reto se desarrolla con React y PHP (Laravel)
+### 1. Levantar el ecosistema completo
+Desde este repositorio (`test-manager-library-3413974-infra`):
+```bash
+docker compose up -d
+```
 
-El spec está escrito para Python y para .NET, pero el reto **no** se hace en esos lenguajes:
+### 2. Ejecutar las migraciones iniciales (T-02)
+La base de datos arranca limpia; ejecute las migraciones en el contenedor:
+```bash
+docker compose exec api php artisan migrate
+```
 
-| Capa | Tecnología del reto |
-|---|---|
-| Frontend | React |
-| Backend | PHP con Laravel |
+### 3. Aprovisionar los datos de demostración (T-21)
+Puebla el catálogo con 42 libros en 5 categorías, 10 socios, préstamos activos y 3 préstamos vencidos:
+```bash
+docker compose exec api php artisan library:demo-seed
+```
 
-Lo que el spec define sobre el negocio —historias, criterios de aceptación, reglas, contrato de la
-API, modelo de datos— se respeta. Lo que define sobre la tecnología se traduce a React y Laravel.
+---
 
-## La prueba no consiste en escribir el código
+## Acceso a las Aplicaciones
 
-El propósito principal es ver la **capacidad de desempeño con SDD** (*Spec-Driven Development*,
-desarrollo guiado por especificación): cómo se lee, se interpreta y se aplica una especificación
-para llevarla a un stack distinto. El código es el medio, no el fin.
+- **Frontend React:** [http://localhost:3000](http://localhost:3000)
+  - Admin: `admin` / `Admin1234*`
+  - Bibliotecario: `ana` / `Librarian123*`
+- **Backend API:** [http://localhost:8000/api/v1](http://localhost:8000/api/v1)
+  - Health check: [http://localhost:8000/health](http://localhost:8000/health)
+- **Sitio Público Estático:** [http://localhost:8080](http://localhost:8080)
 
-## Feria de presentación
+---
 
-Al cerrar la prueba (3:00 p. m.) cada aprendiz **presenta su proyecto** al grupo: qué construyó del spec, qué dejó fuera y por qué,
-y una demostración corta de lo que funciona (la aplicación y el sitio público). Lo que se presenta es lo que quedó **subido a los forks
-antes de las 3:00 p. m.**: no se presenta nada que no esté en GitHub.
-
-## Los seis repositorios
-
-| Repositorio | Qué va ahí |
-|---|---|
-| [`test-manager-library-3413974-docs`](https://github.com/code-sena/test-manager-library-3413974-docs) | El spec: `spec-python/` y `spec-.net/` |
-| [`test-manager-library-3413974-api`](https://github.com/code-sena/test-manager-library-3413974-api) | Backend en PHP (Laravel) |
-| [`test-manager-library-3413974-app`](https://github.com/code-sena/test-manager-library-3413974-app) | Frontend en React |
-| [`test-manager-library-3413974-page`](https://github.com/code-sena/test-manager-library-3413974-page) | Sitio público estático de presentación |
-| [`test-manager-library-3413974-infra`](https://github.com/code-sena/test-manager-library-3413974-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
-| [`test-manager-library-3413974-tool`](https://github.com/code-sena/test-manager-library-3413974-tool) | Utilidades: sembrador de datos de demostración |
+## Ejecución de Pruebas Automatizadas
+Desde `test-manager-library-3413974-api`:
+```bash
+docker compose run --rm test
+```
+Resultados de la suite: **62 pruebas aprobadas, 212 aserciones**.
